@@ -1,106 +1,98 @@
-# Ticketr – simple event ticket system
+# Ticketr
 
-## 📌 Description
-A web-based system for ticket sales and management with:
-- User roles (Normal/Administrator)
-- Real-time availability management
-- Protection against overselling with concurrency handling
+Simple event ticket system. Web-based sales and management with role-based access, real-time availability, and concurrency-safe purchase handling.
 
-## 🛠️ Technologies
-| **Technology**      | **Version** | **Usage**                        |
-|---------------------|-------------|----------------------------------|
-| Java                | 21+         | Base language of the system      |
-| Spring Boot         | 3.x         | Backend framework                 |
-| Thymeleaf           | 3.1         | HTML template engine             |
-| Bootstrap           | 5.3         | Responsive design                |
-| MySQL               | 8.0+        | Relational database              |
-| Spring Security     | 6.x         | Authentication and authorization |
+### Description
 
-## 🏗️ Architecture
-→ Client (Browser)
-<br>
-→ Spring Boot Server (MVC)
-<br>
-→ MySQL Database
+Ticketr provides:
 
+- Two roles: normal user and administrator
+- Real-time ticket availability
+- Concurrency control to prevent overselling
 
-### Package Structure
+### Stack
+
+| Technology       | Version | Purpose                    |
+|------------------|---------|----------------------------|
+| Java             | 21      | Runtime                    |
+| Spring Boot      | 3.x     | Backend                    |
+| Thymeleaf        | 3.1     | Server-side templates      |
+| Bootstrap        | 5.3     | UI                         |
+| MySQL            | 8.0+    | Database                   |
+| Spring Security  | 6.x     | Auth and authorization     |
+
+### Architecture
+
 ```
-src/
-├── main/
-│ ├── java/
-│ │ └── com/example/
-│ │ ├── config/ # Configuration
-│ │ ├── controller/ # Navigation logic
-│ │ ├── model/ # Entities
-│ │ ├── repository/ # Data access
-│ │ └── Application.java
-│ └── resources/
-│ ├── static/ # CSS/JS
-│ └── templates/ # Views
+Browser  -->  Spring Boot (MVC)  -->  MySQL
 ```
 
+### Package layout
 
-## 🔑 Main Features
-### 1. Authentication
-- User login/registration
-- Default `ADMIN` role created:
-    ```plaintext
-    Email: admin@admin.com
-    Password: admin123
-    ```
-
-
-### 2. Event Management (CRUD)
-- Accessible only to administrators
-- Endpoints:
-- `GET /admin/eventos` - List events
-- `POST /admin/eventos/guardar` - Create/edit
-- `GET /admin/eventos/eliminar/{id}` - Delete
-
-### 3. Ticket Purchase
-```java
-@Transactional
-public synchronized boolean comprarBoletos(...) {
-// Logic with concurrency handling
-}
+```
+src/main/java/com/example/sistemaboletos/
+  config/       Security and app configuration
+  controller/   HTTP handlers and navigation
+  model/        Entities (Usuario, Evento, Compra, Rol, EntidadBase)
+  model/servicio/  Service interfaces and implementations
+  repository/   JPA data access
+  SistemaBoletosApplication.java
 ```
 
-## 🚀 How to Run
+### Features
 
-1. Requirements:
-   - JDK 21+
-   - MySQL 8.0+
-   - Maven
-2. Configuration
-    ```properties
-    # src/main/resources/application.properties
-    spring.datasource.url=jdbc:mysql://localhost:3306/sistema_boletos
-    spring.datasource.username=username
-    spring.datasource.password=password
-    ```
-3. Create the database
+**Auth**
+
+- Login and registration
+- Default admin account: `admin@admin.com` / `admin123`
+
+**Events (admin only)**
+
+- CRUD at `/admin/eventos`
+- List: `GET /admin/eventos`
+- Save: `POST /admin/eventos/guardar`
+- Delete: `GET /admin/eventos/eliminar/{id}`
+
+**Purchases**
+
+- Concurrency-safe ticket purchase via `@Transactional` and `synchronized` in `EventoServiceImpl.comprarBoletos()`
+
+### Run
+
+**Prerequisites:** JDK 21+, MySQL 8.0+, Maven
+
+1. Create database:
+
    ```sql
    CREATE DATABASE sistema_boletos;
    ```
 
-4. Commands
-    ```bash
-    mvn spring-boot:run
-    ```
+2. Set connection in `src/main/resources/application.properties`:
 
-## ✅ Requirements Met
+   ```properties
+   spring.datasource.url=jdbc:mysql://localhost:3306/sistema_boletos
+   spring.datasource.username=your_user
+   spring.datasource.password=your_password
+   ```
 
-| **Category**         | **Requirement**                     | **Implementation**                                                                 | **Evidence**                                                                 |
-|----------------------|-------------------------------------|------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| **Architecture**     | Client-Server                       | Spring Boot (backend) + Thymeleaf/Bootstrap (frontend)                             | HTTP requests, clear separation of layers                                     |
-| **Concurrency**      | Thread handling                     | `@Transactional` + `synchronized` in `EventoServiceImpl.comprarBoletos()`          | [See code](src/main/java/com/example/sistemaboletos/model/servicio/EventoServiceImpl.java)                                                               |
-| **Security**         | Authentication                      | Spring Security with roles                                                          | Protection of `/admin/**` routes                                              |
-| **Persistence**      | Complete CRUDs                      | 4 CRUDs: Users, Events, Purchases, Tickets (management)                            | JPA repositories                                                              |
-| **Validations**      | Exception handling                  | Error control in purchases + Spring Security exceptions                             | Messages in views (`login?error`)                                             |
-| **Data Structures**  | Generic collections                 | Use of `List<T>` (JPA), `Optional<T>` (queries), implicit `Map` (Security)         | Methods `findAll()`, `findByEmail()`                                          |
-| **OOP**              | Abstract class                      | `EntidadBase` (inheritance for all entities)                                        | Centralizes `id` field                                                        |
-|                      | Enum                                | `Rol` (USER, ADMIN)                                                                | Definition of system roles                                                    |
-|                      | Interface                           | `IEventoService` (contract for event services)                                      | Implemented in `EventoServiceImpl`                                            |
+3. Start the app:
 
+   ```bash
+   mvn spring-boot:run
+   ```
 
+### Requirements checklist
+
+| Area           | Requirement           | How it is met |
+|----------------|-----------------------|---------------|
+| Architecture   | Client–server         | Spring Boot backend, Thymeleaf/Bootstrap frontend |
+| Concurrency    | Thread safety         | `@Transactional` + `synchronized` in `EventoServiceImpl.comprarBoletos()` ([code](src/main/java/com/example/sistemaboletos/model/servicio/EventoServiceImpl.java)) |
+| Security       | Authentication        | Spring Security; `/admin/**` restricted by role |
+| Persistence    | Full CRUD             | JPA repositories for Users, Events, Purchases, Tickets |
+| Validation     | Error handling        | Purchase validation and Spring Security error views (e.g. `login?error`) |
+| Data structures| Generic collections   | `List<T>`, `Optional<T>`, Security context maps |
+| OOP            | Abstract class        | `EntidadBase` for shared `id` |
+| OOP            | Enum                  | `Rol` (USER, ADMIN) |
+| OOP            | Interface             | `IEventoService` implemented by `EventoServiceImpl` |
+
+Spanish version: [README_ES.md](README_ES.md)
